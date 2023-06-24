@@ -23,14 +23,11 @@ def load_data():
         data = {'chats': {}, 'chat_levels': {}}
     return data
 
+# bot mulai, auto update message leaderboard
 async def update_message():
     await bot.wait_until_ready()
     channel_chats = bot.get_channel(1121995813770493992)
-    channel_level_chats = bot.get_channel(1122012474619732019) 
-    # Ganti CHANNEL_ID dengan ID text channel yang diinginkan
     message = await channel_chats.send('yang akan diperbarui')
-    message2 = await channel_level_chats.send('yang akan diperbarui')
-    
     while not bot.is_closed():
         try:
             #time.strftime('%Y-%m-%d %H:%M:%S')
@@ -46,29 +43,12 @@ async def update_message():
                     output += f"{i}. `{user.name}` {message_count} pesan\n"
                 except discord.NotFound:
                     output += f"{i}. User tidak ditemukan: {message_count} pesan\n"
-
             await message.edit(content=output)
-
-            data = load_data()
-            levels = data['chat_levels']
-            sorted_levels = sorted(levels.items(), key=lambda x: x[1], reverse=True)
-
-            output = f"{date}\nUpdate Levels:\n" 
-            for i, (user_id, levels) in enumerate(sorted_levels, start=1):
-                try:
-                    user = await bot.fetch_user(int(user_id))
-                    output += f"{i}. `{user.name}` {levels} levels\n"
-                except discord.NotFound:
-                    output += f"{i}. User tidak ditemukan: {levels} levels\n"
-
-            await message2.edit(content=output)
-
             # Menunggu interval waktu sebelum melakukan perbaruan selanjutnya
             await asyncio.sleep(10)  # Ganti 5 dengan interval waktu dalam detik
         except discord.errors.NotFound:
             # Pesan tidak ditemukan, kemungkinan sudah dihapus, maka kirim pesan baru
             message = await channel_chats.send('yang akan diperbarui')
-            message2 = await channel_level_chats.send('yang akan diperbarui')
 
 # Simpan leaderboard dan level ke file JSON
 def save_data(data):
@@ -88,7 +68,7 @@ def update_chat_levels(data, user_id, message_count):
     chat_levels = data['chat_levels']
     if str(user_id) in chat_levels:
         current_level = chat_levels[str(user_id)]
-        if message_count >= current_level * 10:
+        if message_count >= current_level * 5:
             chat_levels[str(user_id)] += 1
 
             levelup = chat_levels[str(user_id)]
@@ -103,12 +83,15 @@ async def on_message(message):
     if not message.author.bot:
         data = load_data()
         user_id = message.author.id
-
         update_chats(data, user_id)
         update_chat_levels(data, user_id, data['chats'][str(user_id)])
-
         save_data(data)
     await bot.process_commands(message)
+
+@bot.command()
+async def profile(ctx):
+    profile = "Cooming Soon..."
+    await ctx.send(profile/data)
 
 # Menjalankan bot
 bot.run('OTY3MTcwODYxNTA3NDQwNjUw.GPLjOD.h93uoLLI57oJBy1whpAZXc7TSBGRiY5QVxNjAo')
