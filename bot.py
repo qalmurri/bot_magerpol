@@ -68,18 +68,19 @@ async def update_leaderboard():
             # Melakukan perbaruan leaderboard_voice di text channel
             data_voice = load_data_voice()
             total_data = data_voice['total']
+            level_data = data_voice['level']
+            combined_data_voice = [(user_id, total_data[user_id], level_data[user_id]) for user_id in total_data]
+            sorted_chats_voice = sorted(combined_data_voice, key=lambda x: x[1], reverse=True)
             #sorted_voice = sorted(total_data.items(), key=lambda x: x[1], reverse=True)
-            leaderboard = sorted(total_data.items(), key=lambda x: x[1]['total_time'], reverse=True)
-
             output = f"{date}\nUpdate Voice:\n"
-            for i, (user_id, stats) in enumerate(leaderboard, start=1):
+            for i, (user_id, stats, level_voice) in enumerate(sorted_chats_voice, start=1):
                 total_time = stats['total_time']
                 struct_time = time.gmtime(total_time)
                 formatted_time = time.strftime("`%m/%d %H:%M:%S`", struct_time)
                 #print(f"{i}. User ID: {user_id}, Total Time: {total_time}")
                 try:
                     user = await bot.fetch_user(int(user_id))
-                    output += f"{i}. `{user.name}` {formatted_time}\n"
+                    output += f"{i}. `{user.name}` `{level_voice}` {formatted_time}\n"
                 except discord.NotFound:
                     output += f"{i}. User tidak ditemukan: {formatted_time} detik\n"
             await message_voice.edit(content=output)
