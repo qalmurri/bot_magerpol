@@ -3,7 +3,7 @@ from discord.ext import commands
 import json
 import time
 
-intents = discord.Intents.default()
+intents = discord.Intents.all()
 intents.voice_states = True
 
 bot = commands.Bot(command_prefix='!', intents=intents)
@@ -14,7 +14,7 @@ def load_data():
         with open('voice.json', 'r') as file:
             data = json.load(file)
     except FileNotFoundError:
-        data = {'join': {}}
+        data = {'join': {}, 'total':{}}
     return data
 
 # Fungsi untuk menyimpan data ke file JSON
@@ -36,20 +36,21 @@ async def on_voice_state_update(member, before, after):
 
     # Mengecek apakah pengguna ada dalam data
     if user_id not in data['join']:
-        data['join'][user_id] = {'status': 0, 'total_time': 0}
+        data['join'][user_id] = 0
+        data['total'][user_id] = {'start_time': 0, 'total_time': 0}
 
     # Mengecek status pengguna di voice channel
     if after.channel:
-        data['join'][user_id]['status'] = 1
-        data['join'][user_id]['start_time'] = time.time()
+        data['join'][user_id] = 1
+        data['total'][user_id]['start_time'] = time.time()
     else:
-        data['join'][user_id]['status'] = 0
-        if 'start_time' in data['join'][user_id]:
-            total_time = time.time() - data['join'][user_id]['start_time']
-            data['join'][user_id]['total_time'] += total_time
-            del data['join'][user_id]['start_time']
+        data['join'][user_id] = 0
+        if 'start_time' in data['total'][user_id]:
+            total_time = time.time() - data['total'][user_id]['start_time']
+            data['total'][user_id]['total_time'] += total_time
+            del data['total'][user_id]['start_time']
 
     # Menyimpan data ke file JSON
     save_data(data)
 
-bot.run('YOUR_DISCORD_BOT_TOKEN')
+bot.run('OTY3MTcwODYxNTA3NDQwNjUw.GPLjOD.h93uoLLI57oJBy1whpAZXc7TSBGRiY5QVxNjAo')
