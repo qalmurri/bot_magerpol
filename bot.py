@@ -7,10 +7,9 @@ from discord.ext import commands
 
 mention_levelup = 1122171407363747860
 leaderboard_chat = 1121995813770493992
+leaderboard_voice = 1122395948111384658
 
 intents = discord.Intents.all()
-intents.typing = False
-intents.presences = False
 bot = commands.Bot(command_prefix='!', intents=intents)
 
 @bot.event
@@ -39,12 +38,14 @@ def load_data_voice():
 async def update_leaderboard():
     await bot.wait_until_ready()
     channel_chats = bot.get_channel(leaderboard_chat)
-    message = await channel_chats.send(':arrows_counterclockwise:')
+    channel_voice = bot.get_channel(leaderboard_voice)
+    message_chat = await channel_chats.send(':arrows_counterclockwise:')
+    message_voice = await channel_voice.send(':arrows_counterclockwise:')
     while not bot.is_closed():
         try:
             #time.strftime('%Y-%m-%d %H:%M:%S')
             date = time.strftime('%H:%M:%S')
-            # Melakukan perbaruan pesan di text channel
+            # Melakukan perbaruan leaderboard_chat di text channel
             data_chat = load_data_chat()
             chats = data_chat['chats']
             levels = data_chat['chat_levels']
@@ -58,12 +59,33 @@ async def update_leaderboard():
                     output += f"{i}. `{user.name}({level})` {message_count} pesan\n"
                 except discord.NotFound:
                     output += f"{i}. User tidak ditemukan: {message_count} pesan\n"
-            await message.edit(content=output)
+            await message_chat.edit(content=output)
+
+            # Melakukan perbaruan leaderboard_voice di text channel
+            data_voice = load_data_voice()
+            total_data = data_voice['total']
+            #sorted_voice = sorted(total_data.items(), key=lambda x: x[1], reverse=True)
+            leaderboard = sorted(total_data.items(), key=lambda x: x[1]['total_time'], reverse=True)
+
+            output = f"{date}\nUpdate Voice:\n"
+            for i, (user_id, stats) in enumerate(leaderboard, start=1):
+                total_time = stats['total_time']
+                struct_time = time.gmtime(total_time)
+                formatted_time = time.strftime("%H:%M:%S", struct_time)
+                #print(f"{i}. User ID: {user_id}, Total Time: {total_time}")
+                try:
+                    user = await bot.fetch_user(int(user_id))
+                    output += f"{i}. `{user.name}` {formatted_time} detik\n"
+                except discord.NotFound:
+                    output += f"{i}. User tidak ditemukan: {formatted_time} detik\n"
+            await message_voice.edit(content=output)
+
             # Menunggu interval waktu sebelum melakukan perbaruan selanjutnya/interval waktu dalam detik
-            await asyncio.sleep(60)
+            await asyncio.sleep(2)
         except discord.errors.NotFound:
             # Pesan tidak ditemukan, terhapus, maka kirim pesan baru
-            message = await channel_chats.send(':arrows_counterclockwise:')
+            message_chat = await channel_chats.send(':arrows_counterclockwise:')
+            message_voice = await channel_voice.send(':arrows_counterclockwise:')
 
 # save semua item ke file json
 def save_data_chat(data_chat):
