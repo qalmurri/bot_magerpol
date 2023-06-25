@@ -6,9 +6,9 @@ import random
 from discord.ext import commands
 
 # id channel
-mention_levelup = 1122171407363747860
-leaderboard_chat = 1121995813770493992
-leaderboard_voice = 1122395948111384658
+mention_levelup = 1122525320038322256
+leaderboard_chat = 1122525391119192216
+leaderboard_voice = 1122525414552784946
 
 #permission
 intents = discord.Intents.all()
@@ -115,7 +115,7 @@ async def update_chat_levels(data_chat, user_id, message_count):
     chat_levels = data_chat['chat_levels']
     if str(user_id) in chat_levels:
         current_level = chat_levels[str(user_id)]
-        if message_count >= current_level * 5:
+        if message_count >= current_level * 100:
             chat_levels[str(user_id)] += 1
             #kirim pesan ke channel jika level up
             levelup = chat_levels[str(user_id)]
