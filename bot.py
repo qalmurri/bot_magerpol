@@ -5,19 +5,22 @@ import time
 import random
 from discord.ext import commands
 
+# id channel
 mention_levelup = 1122171407363747860
 leaderboard_chat = 1121995813770493992
 leaderboard_voice = 1122395948111384658
 
+#permission
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='!', intents=intents)
 
 @bot.event
 async def on_ready():
     print(f'Connected as {bot.user.name}')
+    #auto update leaderboard
     await update_leaderboard()
 
-# Inisialisasi leaderboard dan level dari file JSON
+# Inisialisasi chat dari file JSON
 def load_data_chat():
     try:
         with open('chat.json', 'r') as file:
@@ -26,15 +29,16 @@ def load_data_chat():
         data_chat = {'chats': {}, 'chat_levels': {}}
     return data_chat
 
+# Inisialisasi voice dari file JSON
 def load_data_voice():
     try:
         with open('voice.json', 'r') as file:
             data_voice = json.load(file)
     except FileNotFoundError:
-        data_voice = {'join': {}, 'total':{}}
+        data_voice = {'join': {}, 'total':{}, 'level': {}}
     return data_voice
 
-# bot online, auto update leaderboard
+# auto update leaderboard
 async def update_leaderboard():
     await bot.wait_until_ready()
     channel_chats = bot.get_channel(leaderboard_chat)
@@ -56,7 +60,7 @@ async def update_leaderboard():
             for i, (user_id, message_count, level) in enumerate(sorted_chats, start=1):
                 try:
                     user = await bot.fetch_user(int(user_id))
-                    output += f"{i}. `{user.name}({level})` {message_count} pesan\n"
+                    output += f"{i}. `{user.name}` `({level})` `{message_count} pesan`\n"
                 except discord.NotFound:
                     output += f"{i}. User tidak ditemukan: {message_count} pesan\n"
             await message_chat.edit(content=output)
@@ -71,11 +75,11 @@ async def update_leaderboard():
             for i, (user_id, stats) in enumerate(leaderboard, start=1):
                 total_time = stats['total_time']
                 struct_time = time.gmtime(total_time)
-                formatted_time = time.strftime("%H:%M:%S", struct_time)
+                formatted_time = time.strftime("`%m/%d %H:%M:%S`", struct_time)
                 #print(f"{i}. User ID: {user_id}, Total Time: {total_time}")
                 try:
                     user = await bot.fetch_user(int(user_id))
-                    output += f"{i}. `{user.name}` {formatted_time} detik\n"
+                    output += f"{i}. `{user.name}` {formatted_time}\n"
                 except discord.NotFound:
                     output += f"{i}. User tidak ditemukan: {formatted_time} detik\n"
             await message_voice.edit(content=output)
@@ -92,6 +96,7 @@ def save_data_chat(data_chat):
     with open('chat.json', 'w') as file:
         json.dump(data_chat, file)
 
+# save semua item ke file json
 def save_data_voice(data_voice):
     with open('voice.json', 'w') as file:
         json.dump(data_voice, file)
@@ -111,7 +116,6 @@ async def update_chat_levels(data_chat, user_id, message_count):
         current_level = chat_levels[str(user_id)]
         if message_count >= current_level * 5:
             chat_levels[str(user_id)] += 1
-
             #kirim pesan ke channel jika level up
             levelup = chat_levels[str(user_id)]
             channel_chats = bot.get_channel(mention_levelup)
@@ -121,6 +125,28 @@ async def update_chat_levels(data_chat, user_id, message_count):
     else:
         chat_levels[str(user_id)] = 1
 
+# Memperbarui level user
+async def update_voice_levels(data_voice, user_id):
+    level = data_voice['level']
+    if str(user_id) in level:
+        current_level = level[str(user_id)]
+        total = data_voice['total'][user_id]['total_time']
+        lvl = total // 1600
+        #1600 = 00:26:40
+        if lvl >= current_level:
+            level[str(user_id)] += 1
+            levelup2 = level[str(user_id)]
+
+            print(str(user_id))
+            print(levelup2)
+            channel_chats = bot.get_channel(mention_levelup)
+            textvoice = [f"Selamat <@{str(user_id)}>, kategori voice mu naik ke level {levelup2}.", f"horeee voice <@{str(user_id)}> level {levelup2}"]
+            random_text_voice = random.choice(textvoice)
+            await channel_chats.send(random_text_voice)
+    else:
+        level[str(user_id)] = 1
+    save_data_voice(data_voice)
+
 # Event listener untuk mengupdate leaderboard dan level setiap kali ada pesan baru
 @bot.event
 async def on_message(message):
@@ -129,23 +155,18 @@ async def on_message(message):
         user_id = message.author.id
         update_chats(data_chat, user_id)
         await update_chat_levels(data_chat, user_id, data_chat['chats'][str(user_id)])
-        
         save_data_chat(data_chat)
     await bot.process_commands(message)
 
 @bot.event
 async def on_voice_state_update(member, before, after):
-    # Memuat data dari file JSON
     data_voice = load_data_voice()
-
-    # Mendapatkan ID pengguna
     user_id = str(member.id)
-
     # Mengecek apakah pengguna ada dalam data
     if user_id not in data_voice['join']:
         data_voice['join'][user_id] = 0
-        data_voice['total'][user_id] = {'start_time': 0, 'total_time': 0}
-
+        data_voice['total'][user_id] = {'total_time': 0, 'start_time': 0}
+        data_voice['level'][user_id] = 0
     # Mengecek status pengguna di voice channel
     if after.channel:
         data_voice['join'][user_id] = 1
@@ -156,15 +177,15 @@ async def on_voice_state_update(member, before, after):
             total_time = time.time() - data_voice['total'][user_id]['start_time']
             data_voice['total'][user_id]['total_time'] += total_time
             del data_voice['total'][user_id]['start_time']
-
     # Menyimpan data ke file JSON
+            await update_voice_levels(data_voice, user_id)
     save_data_voice(data_voice)
 
 #command profile
 @bot.command()
 async def profile(ctx):
     data_chat = load_data_chat()
-    chats = data['chats']
+    chats = data_chat['chats']
     levels = data_chat['chat_levels']
     author_id = str(ctx.author.id)
     if author_id in chats and author_id in levels:
@@ -175,4 +196,5 @@ async def profile(ctx):
     else:
         await ctx.send("Profile not found.")
 
+#runrunrunrunrun
 bot.run('OTY3MTcwODYxNTA3NDQwNjUw.GPLjOD.h93uoLLI57oJBy1whpAZXc7TSBGRiY5QVxNjAo')
