@@ -5,7 +5,7 @@ import time
 import random
 from discord.ext import commands
 
-notif_levelup = 1122171407363747860
+mention_levelup = 1122171407363747860
 leaderboard_chat = 1121995813770493992
 
 intents = discord.Intents.all()
@@ -16,9 +16,9 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 @bot.event
 async def on_ready():
     print(f'Connected as {bot.user.name}')
-    await update_message()
+    await update_leaderboard()
 
- # Inisialisasi leaderboard dan level dari file JSON
+# Inisialisasi leaderboard dan level dari file JSON
 def load_data():
     try:
         with open('chat.json', 'r') as file:
@@ -27,8 +27,8 @@ def load_data():
         data = {'chats': {}, 'chat_levels': {}}
     return data
 
-# bot mulai, auto update message leaderboard
-async def update_message():
+# bot online, auto update leaderboard
+async def update_leaderboard():
     await bot.wait_until_ready()
     channel_chats = bot.get_channel(leaderboard_chat)
     message = await channel_chats.send(':arrows_counterclockwise:')
@@ -41,11 +41,7 @@ async def update_message():
             chats = data['chats']
             levels = data['chat_levels']
             combined_data = [(user_id, chats[user_id], levels[user_id]) for user_id in chats]
-            print(combined_data)
-#            for user_id, value in combined_data.items():
-#                chat_value = value["chat"]
-#                level_value = value["level"]
-#                print(f"User ID: {user_id}, Chat: {chat_value}, Level: {level_value}")
+            # print(combined_data)
             sorted_chats = sorted(combined_data, key=lambda x: x[1], reverse=True)
             output = f"{date}\nUpdate Chats:\n" 
             for i, (user_id, message_count, level) in enumerate(sorted_chats, start=1):
@@ -55,10 +51,10 @@ async def update_message():
                 except discord.NotFound:
                     output += f"{i}. User tidak ditemukan: {message_count} pesan\n"
             await message.edit(content=output)
-            # Menunggu interval waktu sebelum melakukan perbaruan selanjutnya
-            await asyncio.sleep(60)  # Ganti 5 dengan interval waktu dalam detik
+            # Menunggu interval waktu sebelum melakukan perbaruan selanjutnya/interval waktu dalam detik
+            await asyncio.sleep(60)
         except discord.errors.NotFound:
-            # Pesan tidak ditemukan, kemungkinan sudah dihapus, maka kirim pesan baru
+            # Pesan tidak ditemukan, terhapus, maka kirim pesan baru
             message = await channel_chats.send(':arrows_counterclockwise:')
 
 # save semua item ke file json
@@ -84,8 +80,7 @@ async def update_chat_levels(data, user_id, message_count):
 
             #kirim pesan ke channel jika level up
             levelup = chat_levels[str(user_id)]
-            channel_chats = bot.get_channel(notif_levelup)
-
+            channel_chats = bot.get_channel(mention_levelup)
             texts = [f"Selamat <@{str(user_id)}>, kategori chat mu naik ke level {levelup}.", f"Anjay! Chat <@{str(user_id)}> sekarang di level {levelup}.", f"<@{str(user_id)}> yang jarang tidur, Chat bisa level {levelup}."]
             random_text = random.choice(texts)
             await channel_chats.send(random_text)
@@ -119,5 +114,4 @@ async def profile(ctx):
     else:
         await ctx.send("Profile not found.")
 
-# Menjalankan bot
 bot.run('OTY3MTcwODYxNTA3NDQwNjUw.GPLjOD.h93uoLLI57oJBy1whpAZXc7TSBGRiY5QVxNjAo')
