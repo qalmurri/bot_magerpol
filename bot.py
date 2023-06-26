@@ -124,7 +124,7 @@ async def update_chat_levels(data_chat, user_id, message_count):
     if str(user_id) in chat_levels:
         current_level = chat_levels[str(user_id)]
         if message_count >= current_level * 1:
-            chat_levels[str(user_id)] += 1
+            chat_levels[str(user_id)] += 100
             #kirim pesan ke channel jika level up
             chat_levelup = chat_levels[str(user_id)]
             channel_chats = bot.get_channel(mention_levelup)
@@ -140,7 +140,7 @@ async def update_voice_levels(data_voice, user_id):
     if str(user_id) in voice_levels:
         current_level = voice_levels[str(user_id)]
         total_time = data_voice['total'][user_id]['total_time']
-        level = total_time // 16
+        level = total_time // 1600
         #1600 = 00:26:40
         if level >= current_level:
             voice_levels[str(user_id)] += 1
@@ -198,7 +198,6 @@ async def profile(ctx):
     chat_levels = data_chat['chat_levels']
     rank_chat = sorted(data_chat["chats"].items(), key=lambda x: x[1], reverse=True)
     user_rank_chat = next((i+1 for i, (uid, _) in enumerate(rank_chat) if uid == author_id), None)
-
     if author_id in chats and author_id in chat_levels:
         chats = chats[author_id]
         chat_levels = chat_levels[author_id]
