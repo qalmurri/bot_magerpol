@@ -191,25 +191,32 @@ async def on_voice_state_update(member, before, after):
 #command profile
 @bot.command()
 async def profile(ctx):
+    #statistik pesaan
+    author_id = str(ctx.author.id)
     data_chat = load_data_chat()
-    data_voice = load_data_voice()
     chats = data_chat['chats']
     chat_levels = data_chat['chat_levels']
-    voice_levels = data_voice['voice_levels']
-    author_id = str(ctx.author.id)
-    if author_id in chats and author_id in chat_levels and author_id in voice_levels and author_id in data_voice['total']:
+    rank_chat = sorted(data_chat["chats"].items(), key=lambda x: x[1], reverse=True)
+    user_rank_chat = next((i+1 for i, (uid, _) in enumerate(rank_chat) if uid == author_id), None)
+
+    if author_id in chats and author_id in chat_levels:
         chats = chats[author_id]
         chat_levels = chat_levels[author_id]
+
+    #statistik voicee
+    data_voice = load_data_voice()
+    voice_levels = data_voice['voice_levels']
+    rank_voice = sorted(data_voice["total"].items(), key=lambda x: x[1]["total_time"], reverse=True)
+    user_rank_voice = next((i+1 for i, (uid, _) in enumerate(rank_voice) if uid == author_id), None)
+    if author_id in voice_levels and author_id in data_voice['total']:
         voice_levels = voice_levels[author_id]
         convert = data_voice['total'][author_id]['total_time']
-        #convert Time
         convert2 = time.gmtime(convert)
         total_time = time.strftime("`%m/%d %H:%M:%S`", convert2)
-        # pesan
-        profile_message = f"<@{author_id}>\n`Chat` `({chat_levels})` `{chats} pesan`\n`Voice` `({voice_levels})` `{total_time}`"
+        profile_message = f"<@{author_id}>\n `#{user_rank_chat}` `Chat` `({chat_levels})` `{chats} pesan`\n`#{user_rank_voice}` `Voice` `({voice_levels})` `{total_time}`"
         await ctx.send(profile_message)
     else:
-        await ctx.send("Profile not found.")
+        await  ctx.send("profile not found")
 
 #runrunrunrunrun
 bot.run('OTY3MTcwODYxNTA3NDQwNjUw.GPLjOD.h93uoLLI57oJBy1whpAZXc7TSBGRiY5QVxNjAo')
