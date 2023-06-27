@@ -9,6 +9,7 @@ from discord.ext import commands
 mention_levelup = 1122525320038322256
 leaderboard_chat = 1122588810400759888
 leaderboard_voice = 1122588822702653541
+leaderboard_xp = 1123202857336836148
 
 #permission
 intents = discord.Intents.all()
@@ -52,8 +53,10 @@ async def update_leaderboard():
     await bot.wait_until_ready()
     channel_chats = bot.get_channel(leaderboard_chat)
     channel_voice = bot.get_channel(leaderboard_voice)
+    channel_xp = bot.get_channel(leaderboard_xp)
     message_chat = await channel_chats.send(':arrows_counterclockwise:')
     message_voice = await channel_voice.send(':arrows_counterclockwise:')
+    message_xp = await channel_xp.send(':arrows_counterclockwise:')
     while not bot.is_closed():
         try:
             #time.strftime('%Y-%m-%d %H:%M:%S')
@@ -63,7 +66,6 @@ async def update_leaderboard():
             chats = data_chat['chats']
             chat_levels = data_chat['chat_levels']
             combined_data_chat = [(user_id, chats[user_id], chat_levels[user_id]) for user_id in chats]
-            #print(combined_data)
             sorted_data_chat = sorted(combined_data_chat, key=lambda x: x[1], reverse=True)
             output = f"> :incoming_envelope: **LEADERBOARD CHAT** :incoming_envelope:\n> *Diupdate* {date}\n" 
             for i, (user_id, message_count, level) in enumerate(sorted_data_chat, start=1):
@@ -76,37 +78,47 @@ async def update_leaderboard():
             #output += additional_text
             await message_chat.edit(content=output)
 
+            # Melakukan perbaruan leaderboard_XP di text channel
+            data_xp = load_data_xp()
+            xp = data_xp['xp']
+            xp_levels = data_xp['xp_levels']
+            combined_data_xp = [(user_id, xp[user_id], xp_levels[user_id]) for user_id in xp]
+            sorted_data_xp = sorted(combined_data_xp, key=lambda x: x[1], reverse=True)
+            output = f"> :incoming_envelope: **LEADERBOARD XP** :incoming_envelope:\n> *Diupdate* {date}\n" 
+            for i, (user_id, xp_count, level) in enumerate(sorted_data_xp, start=1):
+                try:
+                    user = await bot.fetch_user(int(user_id))
+                    output += f"{i}. `{user.name}` `({level})` `{xp_count} XP`\n"
+                except discord.NotFound:
+                    output += f"{i}. User tidak ditemukan: {xp_count} XP\n"
+            #additional_text = f"> :incoming_envelope: **LEADERBOARD CHAT** :incoming_envelope:\n> *Diupdate* {date}\n" 
+            #output += additional_text
+            await message_xp.edit(content=output)
+
             # Melakukan perbaruan leaderboard_voice di text channel
             data_voice = load_data_voice()
             total = data_voice['total']
             level_data = data_voice['voice_levels']
-            #combined_data_voice = [(user_id, total_data[user_id], level_data[user_id]) for user_id in total_data]
             combined_data_voice = [(user_id, total[user_id]['total_time'], level_data[user_id]) for user_id in total]
             sorted_chats_voice = sorted(combined_data_voice, key=lambda x: x[1], reverse=True)
-            #sorted_voice = sorted(total_data.items(), key=lambda x: x[1], reverse=True)
             output = f"> :sound: **LEADERBOARD VOICE** :sound:\n> *Diupdate* {date}\n" 
-            #for i, (user_id, stats, level_voice) in enumerate(sorted_chats_voice, start=1):
-            #    total_time = stats['total_time']
             for i, (user_id, stats, level_voice) in enumerate(sorted_chats_voice, start=1):
                 convert = stats
-                # conver time
                 convert2 = time.gmtime(convert)
                 total_time = time.strftime("`%m/%d %H:%M:%S`", convert2)
-                #print(f"{i}. User ID: {user_id}, Total Time: {total_time}")
                 try:
                     user = await bot.fetch_user(int(user_id))
                     output += f"{i}. `{user.name}` `({level_voice})` {total_time}\n"
                 except discord.NotFound:
                     output += f"{i}. User tidak ditemukan: {total_time} detik\n"
-            #additional_text2 = f"> :sound: **LEADERBOARD VOICE** :sound:\n> *Diupdate* {date}\n" 
-            #output += additional_text2
             await message_voice.edit(content=output)
-            # Menunggu interval waktu sebelum melakukan perbaruan selanjutnya/interval waktu dalam detik
+
             await asyncio.sleep(2)
         except discord.errors.NotFound:
             # Pesan tidak ditemukan, terhapus, maka kirim pesan baru
             message_chat = await channel_chats.send(':arrows_counterclockwise:')
             message_voice = await channel_voice.send(':arrows_counterclockwise:')
+            message_xp = await channel_xp.send(':arrows_counterclockwise:')
 
 # save semua item ke file json
 def save_data_chat(data_chat):
@@ -263,6 +275,10 @@ async def profile(ctx):
         convert = data_voice['total'][author_id]['total_time']
         convert2 = time.gmtime(convert)
         total_time = time.strftime("`%m/%d %H:%M:%S`", convert2)
+    else:
+        total_time = 0
+        voice_levels = 0
+        user_rank_voice = 0
     #statistik xp
     data_xp = load_data_xp()
     xp = data_xp['xp']
@@ -273,7 +289,7 @@ async def profile(ctx):
         xp = xp[author_id]
         xp_levels = xp_levels[author_id]
 #pesan profile
-        profile_message = f"<@{author_id}>\n`#{user_rank_chat}` `Chat` `({chat_levels})` `{chats} pesan`\n`#{user_rank_voice}` `Voice` `({voice_levels})` `{total_time}`\n`#{user_rank_xp}` `Score` `({xp_levels})` `{xp}`"
+        profile_message = f"<@{author_id}>\n`#{user_rank_chat}` `Chat` `({chat_levels})` `{chats} pesan`\n`#{user_rank_voice}` `Voice` `({voice_levels})` `{total_time}`\n`#{user_rank_xp}` `Score` `({xp_levels})` `{xp}` `XP`"
         await ctx.send(profile_message)
     else:
         await  ctx.send("profile not found")
