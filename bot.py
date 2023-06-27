@@ -41,7 +41,7 @@ def load_data_voice():
 # Inisialisasi chat dari file JSON
 def load_data_xp():
     try:
-        with open('xp.json', 'r') as file:
+        with open('experience.json', 'r') as file:
             data_xp = json.load(file)
     except FileNotFoundError:
         data_xp= {'xp': {}, 'xp_levels': {}}
@@ -131,30 +131,21 @@ def update_chats(data_chat, user_id):
     else:
         chats[str(user_id)] = 1
 
-# memperbarui jumlah xp user
-#    xp = data_xp['xp']
-#    if str(user_id) in xp:
-#        xp[str(user_id)] += 1
-#    else:
-#        xp[str(user_id)] = 1
 def update_xp(data_xp, user_id):
-    xp = data_xp['xp']
     data_voice = load_data_voice()
     data_chat = load_data_chat()
     chats = data_chat['chats']
-    print(xp)
+    xp = data_xp['xp']
     if str(user_id) in xp:
-        xp[str(user_id)] += 23
-     #   xp[str(user_id)] = 1
-    #and str(user_id) in chats and str(user_id) in data_voice['total']:
-    #    convert = data_voice['total'][str(user_id)]['total_time']
-    #    total_time = round(convert)
-    #    score = (total_time + chats[str(user_id)]) * 3
-
-        xp[str(user_id)] += 100  # Ubah menjadi xp[str(user_id)] += score agar nilai sebelumnya ditambahkan
+        if str(user_id) in chats and str(user_id) in data_voice['total']:
+            convert = data_voice['total'][str(user_id)]['total_time']
+            total_time = round(convert)
+            score = (total_time + chats[str(user_id)]) * 3
+        else:
+            score = chats[str(user_id)] * 3
+        xp[str(user_id)] = score  # Ubah menjadi xp[str(user_id)] += score agar nilai sebelumnya ditambahkan
     else:
         xp[str(user_id)] = 1
-
 
 # Memperbarui level chat user
 async def update_chat_levels(data_chat, user_id, message_count):
@@ -171,6 +162,25 @@ async def update_chat_levels(data_chat, user_id, message_count):
             await channel_chats.send(random_text)
     else:
         chat_levels[str(user_id)] = 1
+
+# Memperbarui level XP user
+async def update_xp_levels(data_xp, user_id):
+    xp = data_xp['xp'][str(user_id)]
+    xp_levels = data_xp['xp_levels']
+    if str(user_id) in xp_levels:
+        current_level = xp_levels[str(user_id)]
+        if xp >= current_level * 1000:
+            xp_levels[str(user_id)] += 1
+            #kirim pesan ke channel jika level up
+            xp_levelup = xp_levels[str(user_id)]
+            print(xp_levelup)
+            channel_xp = bot.get_channel(mention_levelup)
+            texts = [f"Selamat <@{str(user_id)}>, kategori XP mu naik ke level {xp_levelup}."]
+            random_text = random.choice(texts)
+            await channel_xp.send(random_text)
+    else:
+        xp_levels[str(user_id)] = 1
+    save_data_xp(data_xp)
 
 # Memperbarui level voice user
 async def update_voice_levels(data_voice, user_id):
@@ -202,7 +212,9 @@ async def on_message(message):
         update_chats(data_chat, user_id)
         update_xp(data_xp, user_id)
         await update_chat_levels(data_chat, user_id, data_chat['chats'][str(user_id)])
+        await update_xp_levels(data_xp, user_id)
         save_data_chat(data_chat)
+        save_data_xp(data_xp)
     await bot.process_commands(message)
 
 @bot.event
@@ -231,8 +243,8 @@ async def on_voice_state_update(member, before, after):
 #command profile
 @bot.command()
 async def profile(ctx):
-    #statistik pesaan
     author_id = str(ctx.author.id)
+    #statistik pesaan
     data_chat = load_data_chat()
     chats = data_chat['chats']
     chat_levels = data_chat['chat_levels']
@@ -241,7 +253,6 @@ async def profile(ctx):
     if author_id in chats and author_id in chat_levels:
         chats = chats[author_id]
         chat_levels = chat_levels[author_id]
-
     #statistik voicee
     data_voice = load_data_voice()
     voice_levels = data_voice['voice_levels']
@@ -252,11 +263,17 @@ async def profile(ctx):
         convert = data_voice['total'][author_id]['total_time']
         convert2 = time.gmtime(convert)
         total_time = time.strftime("`%m/%d %H:%M:%S`", convert2)
-        #Score penambahan voice dan chat
-        score_voice = round(convert)
-        score = (score_voice + chats) * 3
-        #Score penambahan voice dan chat
-        profile_message = f"<@{author_id}>\n`#{user_rank_chat}` `Chat` `({chat_levels})` `{chats} pesan`\n`#{user_rank_voice}` `Voice` `({voice_levels})` `{total_time}`\nScoremu adalah {score}"
+    #statistik xp
+    data_xp = load_data_xp()
+    xp = data_xp['xp']
+    xp_levels = data_xp['xp_levels']
+    rank_xp = sorted(data_xp["xp"].items(), key=lambda x: x[1], reverse=True)
+    user_rank_xp = next((i+1 for i, (uid, _) in enumerate(rank_xp) if uid == author_id), None)
+    if author_id in xp and author_id in xp_levels:
+        xp = xp[author_id]
+        xp_levels = xp_levels[author_id]
+#pesan profile
+        profile_message = f"<@{author_id}>\n`#{user_rank_chat}` `Chat` `({chat_levels})` `{chats} pesan`\n`#{user_rank_voice}` `Voice` `({voice_levels})` `{total_time}`\n`#{user_rank_xp}` `Score` `({xp_levels})` `{xp}`"
         await ctx.send(profile_message)
     else:
         await  ctx.send("profile not found")
