@@ -38,6 +38,15 @@ def load_data_voice():
         data_voice = {'join': {}, 'total':{}, 'voice_levels': {}}
     return data_voice
 
+# Inisialisasi chat dari file JSON
+def load_data_xp():
+    try:
+        with open('xp.json', 'r') as file:
+            data_xp = json.load(file)
+    except FileNotFoundError:
+        data_xp= {'xp': {}, 'xp_levels': {}}
+    return data_xp
+
 # auto update leaderboard
 async def update_leaderboard():
     await bot.wait_until_ready()
@@ -92,7 +101,6 @@ async def update_leaderboard():
             #additional_text2 = f"> :sound: **LEADERBOARD VOICE** :sound:\n> *Diupdate* {date}\n" 
             #output += additional_text2
             await message_voice.edit(content=output)
-
             # Menunggu interval waktu sebelum melakukan perbaruan selanjutnya/interval waktu dalam detik
             await asyncio.sleep(2)
         except discord.errors.NotFound:
@@ -110,6 +118,11 @@ def save_data_voice(data_voice):
     with open('voice.json', 'w') as file:
         json.dump(data_voice, file)
 
+# save semua item ke file json
+def save_data_xp(data_xp):
+    with open('experience.json', 'w') as file:
+        json.dump(data_xp, file)
+
 # memperbarui jumlah pesan user di leaderboard
 def update_chats(data_chat, user_id):
     chats = data_chat['chats']
@@ -118,13 +131,38 @@ def update_chats(data_chat, user_id):
     else:
         chats[str(user_id)] = 1
 
-# Memperbarui level user
+# memperbarui jumlah xp user
+#    xp = data_xp['xp']
+#    if str(user_id) in xp:
+#        xp[str(user_id)] += 1
+#    else:
+#        xp[str(user_id)] = 1
+def update_xp(data_xp, user_id):
+    xp = data_xp['xp']
+    data_voice = load_data_voice()
+    data_chat = load_data_chat()
+    chats = data_chat['chats']
+    print(xp)
+    if str(user_id) in xp:
+        xp[str(user_id)] += 23
+     #   xp[str(user_id)] = 1
+    #and str(user_id) in chats and str(user_id) in data_voice['total']:
+    #    convert = data_voice['total'][str(user_id)]['total_time']
+    #    total_time = round(convert)
+    #    score = (total_time + chats[str(user_id)]) * 3
+
+        xp[str(user_id)] += 100  # Ubah menjadi xp[str(user_id)] += score agar nilai sebelumnya ditambahkan
+    else:
+        xp[str(user_id)] = 1
+
+
+# Memperbarui level chat user
 async def update_chat_levels(data_chat, user_id, message_count):
     chat_levels = data_chat['chat_levels']
     if str(user_id) in chat_levels:
         current_level = chat_levels[str(user_id)]
-        if message_count >= current_level * 1:
-            chat_levels[str(user_id)] += 100
+        if message_count >= current_level * 100:
+            chat_levels[str(user_id)] += 1
             #kirim pesan ke channel jika level up
             chat_levelup = chat_levels[str(user_id)]
             channel_chats = bot.get_channel(mention_levelup)
@@ -134,7 +172,7 @@ async def update_chat_levels(data_chat, user_id, message_count):
     else:
         chat_levels[str(user_id)] = 1
 
-# Memperbarui level user
+# Memperbarui level voice user
 async def update_voice_levels(data_voice, user_id):
     voice_levels = data_voice['voice_levels']
     if str(user_id) in voice_levels:
@@ -159,8 +197,10 @@ async def update_voice_levels(data_voice, user_id):
 async def on_message(message):
     if not message.author.bot:
         data_chat = load_data_chat()
+        data_xp = load_data_xp()
         user_id = message.author.id
         update_chats(data_chat, user_id)
+        update_xp(data_xp, user_id)
         await update_chat_levels(data_chat, user_id, data_chat['chats'][str(user_id)])
         save_data_chat(data_chat)
     await bot.process_commands(message)
@@ -212,10 +252,14 @@ async def profile(ctx):
         convert = data_voice['total'][author_id]['total_time']
         convert2 = time.gmtime(convert)
         total_time = time.strftime("`%m/%d %H:%M:%S`", convert2)
-        profile_message = f"<@{author_id}>\n `#{user_rank_chat}` `Chat` `({chat_levels})` `{chats} pesan`\n`#{user_rank_voice}` `Voice` `({voice_levels})` `{total_time}`"
+        #Score penambahan voice dan chat
+        score_voice = round(convert)
+        score = (score_voice + chats) * 3
+        #Score penambahan voice dan chat
+        profile_message = f"<@{author_id}>\n`#{user_rank_chat}` `Chat` `({chat_levels})` `{chats} pesan`\n`#{user_rank_voice}` `Voice` `({voice_levels})` `{total_time}`\nScoremu adalah {score}"
         await ctx.send(profile_message)
     else:
         await  ctx.send("profile not found")
-
+    
 #runrunrunrunrun
 bot.run('OTY3MTcwODYxNTA3NDQwNjUw.GPLjOD.h93uoLLI57oJBy1whpAZXc7TSBGRiY5QVxNjAo')
