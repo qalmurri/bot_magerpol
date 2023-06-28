@@ -1,9 +1,12 @@
-import discord
+#py -m pip install discord-ui
+import discord 
+from discord.ext import commands
 import json
 import asyncio
 import time
 import random
-from discord.ext import commands
+
+
 
 # id channel
 mention_levelup = 1122525320038322256
@@ -12,8 +15,7 @@ leaderboard_voice = 1122588822702653541
 leaderboard_xp = 1123202857336836148
 
 #permission
-intents = discord.Intents.all()
-bot = commands.Bot(command_prefix='!', intents=intents)
+bot = commands.Bot(command_prefix='!', intents=discord.Intents.all())
 
 @bot.event
 async def on_ready():
@@ -162,6 +164,8 @@ def update_xp(data_xp, user_id):
 # Memperbarui level chat user
 async def update_chat_levels(data_chat, user_id, message_count):
     chat_levels = data_chat['chat_levels']
+    rank_chats = sorted(data_chat["chats"].items(), key=lambda x: x[1], reverse=True)
+    user_rank_chats = next((i+1 for i, (uid, _) in enumerate(rank_chats) if uid == str(user_id)), None)
     if str(user_id) in chat_levels:
         current_level = chat_levels[str(user_id)]
         if message_count >= current_level * 100:
@@ -169,30 +173,48 @@ async def update_chat_levels(data_chat, user_id, message_count):
             #kirim pesan ke channel jika level up
             chat_levelup = chat_levels[str(user_id)]
             channel_chats = bot.get_channel(mention_levelup)
-            texts = [f"Selamat <@{str(user_id)}>, kategori chat mu naik ke level {chat_levelup}.", f"Anjay! Chat <@{str(user_id)}> sekarang di level {chat_levelup}.", f"<@{str(user_id)}> yang jarang tidur, Chat aja bisa level {chat_levelup}.", f"Keren <@{str(user_id)}> udah level {chat_levelup}, Chatingan sama siapa aja?", f"Lagi gabut ya <@{str(user_id)}>? sampe-sampe Chat udah level {chat_levelup}.", f"Maniak Chat ya <@{str(user_id)}>, gak kerasa Chat udah level {chat_levelup}.", f"<@{str(user_id)}> rajin amat nge-Chat, padahal sudah level {chat_levelup}.", f"Chat tanpa <@{str(user_id)}> sepi, Terima Kasih sudah level {chat_levelup}.", f"<@{str(user_id)}> Chat terbaik! Terima kasih sudah level {chat_levelup} :crown:", f"<@{str(user_id)}> :two_hearts: Chatmu sekarang sudah level {chat_levelup}."]
-            random_text = random.choice(texts)
-            await channel_chats.send(random_text)
+            randomchat_levelup = [f"Selamat <@{str(user_id)}>, kategori chat mu naik ke level {chat_levelup}.", f"Anjay! Chat <@{str(user_id)}> sekarang di level {chat_levelup}.", f"<@{str(user_id)}> yang jarang tidur, Chat aja bisa level {chat_levelup}.", f"Keren <@{str(user_id)}> udah level {chat_levelup}, Chatingan sama siapa aja?", f"Lagi gabut ya <@{str(user_id)}>? sampe-sampe Chat udah level {chat_levelup}.", f"Maniak Chat ya <@{str(user_id)}>, gak kerasa Chat udah level {chat_levelup}.", f"<@{str(user_id)}> rajin amat nge-Chat, padahal sudah level {chat_levelup}.", f"Chat tanpa <@{str(user_id)}> sepi, Terima Kasih sudah level {chat_levelup}.", f"<@{str(user_id)}> Chat terbaik! Terima kasih sudah level {chat_levelup} :crown:", f"<@{str(user_id)}> :two_hearts: Chatmu sekarang sudah level {chat_levelup}."]
+            textchat_levelup = random.choice(randomchat_levelup)
+            await embed_chat_levelup(textchat_levelup, user_rank_chats)
     else:
         chat_levels[str(user_id)] = 1
+    
+async def embed_chat_levelup(textchat_levelup, user_rank_chats):
+    embed = discord.Embed(
+        description=textchat_levelup,
+        color=discord.Color.random()
+    )
+    embed.set_footer(text="Chat-mu peringkat #" + str(user_rank_chats))
+    channel_xp = bot.get_channel(mention_levelup)
+    await channel_xp.send(embed=embed)
 
 # Memperbarui level XP user
 async def update_xp_levels(data_xp, user_id):
     xp = data_xp['xp'][str(user_id)]
     xp_levels = data_xp['xp_levels']
+    rank_xp = sorted(data_xp["xp"].items(), key=lambda x: x[1], reverse=True)
+    user_rank_xp = next((i+1 for i, (uid, _) in enumerate(rank_xp) if uid == str(user_id)), None)
     if str(user_id) in xp_levels:
         current_level = xp_levels[str(user_id)]
         if xp >= current_level * 1000:
             xp_levels[str(user_id)] += 1
             #kirim pesan ke channel jika level up
             xp_levelup = xp_levels[str(user_id)]
-            print(xp_levelup)
-            channel_xp = bot.get_channel(mention_levelup)
-            texts = [f"Selamat <@{str(user_id)}>, kategori XP mu naik ke level {xp_levelup}."]
-            random_text = random.choice(texts)
-            await channel_xp.send(random_text)
+            randomxp_levelup = [f"Selamat <@{str(user_id)}>, kategori XP mu naik ke level {xp_levelup}."]
+            textxp_levelup = random.choice(randomxp_levelup)
+            await embed_xp_levelup(textxp_levelup, user_rank_xp)
     else:
         xp_levels[str(user_id)] = 1
     save_data_xp(data_xp)
+
+async def embed_xp_levelup(textxp_levelup, user_rank_xp):
+    embed = discord.Embed(
+        description=textxp_levelup,
+        color=discord.Color.random()
+    )
+    embed.set_footer(text="XP-mu peringkat #" + str(user_rank_xp))
+    channel_xp = bot.get_channel(mention_levelup)
+    await channel_xp.send(embed=embed)
 
 # Memperbarui level voice user
 async def update_voice_levels(data_voice, user_id):
@@ -205,14 +227,20 @@ async def update_voice_levels(data_voice, user_id):
         if level >= current_level:
             voice_levels[str(user_id)] += 1
             voice_levelup = voice_levels[str(user_id)]
-            channel_voice = bot.get_channel(mention_levelup)
-            #{str(user_id)} {voice_levelup}
             randomvoice_levelup = [f"Gwendeng, wes bosen koen <@{str(user_id)}>? Voicemu wes level {voice_levelup}.", f"Selamat <@{str(user_id)}>, kategori voice mu naik ke level {voice_levelup}.", f"Sumpek a <@{str(user_id)}>? Voicemu wes level {voice_levelup}.", f"Emang kalo gak ada <@{str(user_id)}> voice jadi sepi, voicemu level {voice_levelup} .", f"<@{str(user_id)}> kenapa udahan? Padahal lagi seru-serunya, voicemu udah level {voice_levelup}.", f"<@{str(user_id)}> Voice terbaik! Terima kasih sudah level {voice_levelup}."]
             textvoice_levelup = random.choice(randomvoice_levelup)
-            await channel_voice.send(textvoice_levelup)
+            await embed_voice_levelup(textvoice_levelup)
     else:
         level[str(user_id)] = 1
     save_data_voice(data_voice)
+
+async def embed_voice_levelup(textvoice_levelup):
+    embed = discord.Embed(
+        description=textvoice_levelup,
+        color=discord.Color.random()
+    )
+    channel_voice = bot.get_channel(mention_levelup)
+    await channel_voice.send(embed=embed)
 
 # Event listener untuk mengupdate leaderboard dan level setiap kali ada pesan baru
 @bot.event
@@ -293,6 +321,27 @@ async def profile(ctx):
         await ctx.send(profile_message)
     else:
         await  ctx.send("profile not found")
-    
+
+@bot.command()
+async def ping(ctx):
+    latency = round(bot.latency * 1000) # Mendapatkan latency bot dalam milidetik
+    await ctx.send(f'Pong! Latency: {latency}ms')
+
+async def test(textvoice_levelup):
+    embed = discord.Embed(
+#        title='',
+        description=textvoice_levelup,
+        color=discord.Color.random()
+    )
+#    embed.set_footer(text="Chat peringkat 2")
+    channel_voice = bot.get_channel(mention_levelup)
+    await channel_voice.send(embed=embed)
+#    embed.add_field(name='Field 1', value='Value 1', inline=False)
+#    embed.add_field(name='Field 2', value='Value 2', inline=False)
+#    embed.add_field(name='Field 2', value='Value 2', inline=False)
+#    image_url = 'https://cdn.discordapp.com/attachments/1119802538967961711/1123224453514526760/FB_IMG_1685250410476.png'
+#    embed.set_image(url=image_url)
+#    embed.set_thumbnail(url=image_url)
+
 #runrunrunrunrun
 bot.run('OTY3MTcwODYxNTA3NDQwNjUw.GPLjOD.h93uoLLI57oJBy1whpAZXc7TSBGRiY5QVxNjAo')
