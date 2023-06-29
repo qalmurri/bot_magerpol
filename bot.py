@@ -1,4 +1,3 @@
-#py -m pip install discord-ui
 import discord 
 from discord.ext import commands
 import json
@@ -6,15 +5,11 @@ import asyncio
 import time
 import random
 
-
-
-# id channel
 mention_levelup = 1122525320038322256
 leaderboard_chat = 1122588810400759888
 leaderboard_voice = 1122588822702653541
 leaderboard_xp = 1123202857336836148
 
-#permission
 bot = commands.Bot(command_prefix='!', intents=discord.Intents.all())
 
 @bot.event
@@ -63,7 +58,6 @@ async def update_leaderboard():
         try:
             #time.strftime('%Y-%m-%d %H:%M:%S')
             date = time.strftime('%H:%M:%S')
-            # Melakukan perbaruan leaderboard_chat di text channel
             data_chat = load_data_chat()
             chats = data_chat['chats']
             chat_levels = data_chat['chat_levels']
@@ -80,7 +74,6 @@ async def update_leaderboard():
             #output += additional_text
             await message_chat.edit(content=output)
 
-            # Melakukan perbaruan leaderboard_XP di text channel
             data_xp = load_data_xp()
             xp = data_xp['xp']
             xp_levels = data_xp['xp_levels']
@@ -93,8 +86,6 @@ async def update_leaderboard():
                     output += f"{i}. `{user.name}` `({level})` `{xp_count} XP`\n"
                 except discord.NotFound:
                     output += f"{i}. User tidak ditemukan: {xp_count} XP\n"
-            #additional_text = f"> :incoming_envelope: **LEADERBOARD CHAT** :incoming_envelope:\n> *Diupdate* {date}\n" 
-            #output += additional_text
             await message_xp.edit(content=output)
 
             # Melakukan perbaruan leaderboard_voice di text channel
@@ -114,7 +105,6 @@ async def update_leaderboard():
                 except discord.NotFound:
                     output += f"{i}. User tidak ditemukan: {total_time} detik\n"
             await message_voice.edit(content=output)
-
             await asyncio.sleep(2)
         except discord.errors.NotFound:
             # Pesan tidak ditemukan, terhapus, maka kirim pesan baru
@@ -157,11 +147,10 @@ def update_xp(data_xp, user_id):
             score = (total_time + chats[str(user_id)]) * 3
         else:
             score = chats[str(user_id)] * 3
-        xp[str(user_id)] = score  # Ubah menjadi xp[str(user_id)] += score agar nilai sebelumnya ditambahkan
+        xp[str(user_id)] = score
     else:
         xp[str(user_id)] = 1
 
-# Memperbarui level chat user
 async def update_chat_levels(data_chat, user_id, message_count):
     chat_levels = data_chat['chat_levels']
     rank_chats = sorted(data_chat["chats"].items(), key=lambda x: x[1], reverse=True)
@@ -188,7 +177,6 @@ async def embed_chat_levelup(textchat_levelup, user_rank_chats):
     channel_xp = bot.get_channel(mention_levelup)
     await channel_xp.send(embed=embed)
 
-# Memperbarui level XP user
 async def update_xp_levels(data_xp, user_id):
     xp = data_xp['xp'][str(user_id)]
     xp_levels = data_xp['xp_levels']
@@ -216,7 +204,6 @@ async def embed_xp_levelup(textxp_levelup, user_rank_xp):
     channel_xp = bot.get_channel(mention_levelup)
     await channel_xp.send(embed=embed)
 
-# Memperbarui level voice user
 async def update_voice_levels(data_voice, user_id):
     voice_levels = data_voice['voice_levels']
     if str(user_id) in voice_levels:
@@ -242,7 +229,6 @@ async def embed_voice_levelup(textvoice_levelup):
     channel_voice = bot.get_channel(mention_levelup)
     await channel_voice.send(embed=embed)
 
-# Event listener untuk mengupdate leaderboard dan level setiap kali ada pesan baru
 @bot.event
 async def on_message(message):
     if not message.author.bot:
@@ -261,12 +247,10 @@ async def on_message(message):
 async def on_voice_state_update(member, before, after):
     data_voice = load_data_voice()
     user_id = str(member.id)
-    # Mengecek apakah pengguna ada dalam data
     if user_id not in data_voice['join']:
         data_voice['join'][user_id] = 0
         data_voice['total'][user_id] = {'total_time': 0, 'start_time': 0}
         data_voice['voice_levels'][user_id] = 0
-    # Mengecek status pengguna di voice channel
     if after.channel:
         data_voice['join'][user_id] = 1
         data_voice['total'][user_id]['start_time'] = time.time()
@@ -276,7 +260,6 @@ async def on_voice_state_update(member, before, after):
             total_time = time.time() - data_voice['total'][user_id]['start_time']
             data_voice['total'][user_id]['total_time'] += total_time
             del data_voice['total'][user_id]['start_time']
-    # Menyimpan data ke file JSON
             await update_voice_levels(data_voice, user_id)
     save_data_voice(data_voice)
 
