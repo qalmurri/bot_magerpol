@@ -5,10 +5,10 @@ import asyncio
 import time
 import random
 
-mention_levelup = 1122525320038322256
-leaderboard_chat = 1122588810400759888
-leaderboard_voice = 1122588822702653541
-leaderboard_xp = 1123202857336836148
+mention_levelup = 1124213302910795876
+leaderboard_chat = 1124213333894103111
+leaderboard_voice = 1124213365640790068
+leaderboard_xp = 1124213380367007855
 
 bot = commands.Bot(command_prefix='!', intents=discord.Intents.all())
 
@@ -310,21 +310,20 @@ async def ping(ctx):
     latency = round(bot.latency * 1000) # Mendapatkan latency bot dalam milidetik
     await ctx.send(f'Pong! Latency: {latency}ms')
 
-async def test(textvoice_levelup):
-    embed = discord.Embed(
-#        title='',
-        description=textvoice_levelup,
-        color=discord.Color.random()
-    )
-#    embed.set_footer(text="Chat peringkat 2")
-    channel_voice = bot.get_channel(mention_levelup)
-    await channel_voice.send(embed=embed)
-#    embed.add_field(name='Field 1', value='Value 1', inline=False)
-#    embed.add_field(name='Field 2', value='Value 2', inline=False)
-#    embed.add_field(name='Field 2', value='Value 2', inline=False)
-#    image_url = 'https://cdn.discordapp.com/attachments/1119802538967961711/1123224453514526760/FB_IMG_1685250410476.png'
-#    embed.set_image(url=image_url)
+@bot.command()
+async def embed(ctx):
+    embed = discord.Embed(title="Contoh Message Embed",
+    description="Ini adalah contoh message embed.",
+    color=discord.Color.random())
+    embed.add_field(name="No", value="> 1", inline=True)
+    embed.add_field(name="Nama", value="> Qalmurri", inline=True)
+    embed.add_field(name="Level", value="> (2)", inline=True)
+    embed.add_field(name="Pesan", value="> 1233", inline=True)
+    embed.set_footer(text="Ini adalah footer")
+    image_url = 'https://cdn.discordapp.com/attachments/1119802538967961711/1123224453514526760/FB_IMG_1685250410476.png'
 #    embed.set_thumbnail(url=image_url)
+#    embed.set_image(url=image_url)
+    await ctx.send(embed=embed)
 
 #runrunrunrunrun
 bot.run('OTY3MTcwODYxNTA3NDQwNjUw.GPLjOD.h93uoLLI57oJBy1whpAZXc7TSBGRiY5QVxNjAo')
