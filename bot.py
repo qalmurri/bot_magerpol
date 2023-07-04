@@ -79,7 +79,7 @@ async def update_leaderboard():
             xp_levels = data_xp['xp_levels']
             combined_data_xp = [(user_id, xp[user_id], xp_levels[user_id]) for user_id in xp]
             sorted_data_xp = sorted(combined_data_xp, key=lambda x: x[1], reverse=True)
-            output = f"> :incoming_envelope: **LEADERBOARD XP** :incoming_envelope:\n> *Diupdate* {date}\n" 
+            output = f"> :star: **LEADERBOARD XP** :star:\n> *Diupdate* {date}\n" 
             for i, (user_id, xp_count, level) in enumerate(sorted_data_xp, start=1):
                 try:
                     user = await bot.fetch_user(int(user_id))
