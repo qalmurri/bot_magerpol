@@ -1,5 +1,6 @@
 import discord 
 from discord.ext import commands
+from discord.ui import Button
 import json
 import asyncio
 import time
@@ -311,7 +312,7 @@ async def ping(ctx):
     await ctx.send(f'Pong! Latency: {latency}ms')
 
 @bot.command()
-async def embed(ctx):
+async def test(ctx):
     embed = discord.Embed(title="Contoh Message Embed",
     description="Ini adalah contoh message embed.",
     color=discord.Color.random())
@@ -324,6 +325,79 @@ async def embed(ctx):
 #    embed.set_thumbnail(url=image_url)
 #    embed.set_image(url=image_url)
     await ctx.send(embed=embed)
+
+@bot.command()
+async def peraturan(ctx):
+    button = Button(style=discord.ButtonStyle.link, label='English', url='https://discord.com/channels/809654746301595679/852476473449119764')
+    view = discord.ui.View()
+    view.add_item(button)
+    await ctx.send('1. SPAM yang dilarang dalam bentuk apa pun.\n2. Dilarang keras berdiskusi atau chat terkait SARA, Politik, LGBT, Agama, dan diskusi sensitif lainnya.\n3. Postingan NSFW yang menyertakan gambar profil sangat dilarang.\n4. Dilarang mengirimkan link promosi untuk mengundang link dalam bentuk apapun tanpa persetujuan Admin.\n5. Dilarang keras berdebat, mengejek, dan membuat drama di Server Perselisihan\n6. Untuk *shitposting* harap digunakan dengan bijak, meme yang berhubungan dengan aturan nomor 2 dan 3 tidak diperbolehkan.')
+    await ctx.send('https://cdn.discordapp.com/attachments/1126869502966116443/1126869584859902022/banner_magerpol2.png', view=view)
+
+@bot.command()
+async def regulations(ctx):
+    button = Button(style=discord.ButtonStyle.link, label='Indonesian', url='https://discord.com/channels/809654746301595679/1126870170774818946')
+    view = discord.ui.View()
+    view.add_item(button)
+    await ctx.send('1. Prohibited SPAM in any form.\n2. It is strictly forbidden to discuss or chat related to SARA, Politics, LGBT, Religion, and other sensitive discussions.\n3. NSFW post including profile picture is strictly prohibited.\n4. It is not permitted to send promotional links to invite links in any form without Admins approval.\n5. It is strictly forbidden to argue, mock and make drama on the Discord Server\n6. For *shitposting* please use it wisely, memes related to rules number 2 and 3 are not allowed.')
+    await ctx.send('https://cdn.discordapp.com/attachments/1126869502966116443/1126869584859902022/banner_magerpol2.png', view=view)
+
+@bot.command()
+async def general(ctx):
+    button = Button(style=discord.ButtonStyle.link, row=0, label='〢⛳Photography', url='https://discord.com/channels/809654746301595679/1126825472584581211')
+    button2 = Button(style=discord.ButtonStyle.link, row=1, label='〢⛳Art', url='https://discord.com/channels/809654746301595679/1126741589868412968')
+    button3 = Button(style=discord.ButtonStyle.link, row=2, label='〢⛳Video Editing', url='https://discord.com/channels/809654746301595679/1126828356005011536')
+    button4 = Button(style=discord.ButtonStyle.link, row=3, label='〢⛳Meme', url='https://discord.com/channels/809654746301595679/1126740792275382293')
+    button5 = Button(style=discord.ButtonStyle.link, row=4, label='〢⛳Pet', url='https://discord.com/channels/809654746301595679/1126850441750257715')
+    view = discord.ui.View()
+    view.add_item(button)
+    view.add_item(button2)
+    view.add_item(button3)
+    view.add_item(button4)
+    view.add_item(button5)
+    await ctx.send(view=view)
+
+@bot.command()
+async def gamer(ctx):
+    button = Button(style=discord.ButtonStyle.link, row=0, label='〢⛳Gameplay', url='https://discord.com/channels/809654746301595679/1126827236599795712')
+    button2 = Button(style=discord.ButtonStyle.link, row=1, label='〢⛳MOD', url='https://discord.com/channels/809654746301595679/1126826514235801646')
+    button3 = Button(style=discord.ButtonStyle.link, row=2, label='〢⛳Screenshot', url='https://discord.com/channels/809654746301595679/1126741123117883412')
+    view = discord.ui.View()
+    view.add_item(button)
+    view.add_item(button2)
+    view.add_item(button3)
+    await ctx.send(view=view)
+
+@bot.command()
+async def anime(ctx):
+    button = Button(style=discord.ButtonStyle.link, row=0, label='〢⛳Cosplay', url='https://discord.com/channels/809654746301595679/1126849609659072562')
+    button2 = Button(style=discord.ButtonStyle.link, row=1, label='〢⛳Screenshot', url='https://discord.com/channels/809654746301595679/1126849424551845989')
+    button3 = Button(style=discord.ButtonStyle.link, row=2, label='〢⛳Manga', url='https://discord.com/channels/809654746301595679/1126849092153266256')
+    button4 = Button(style=discord.ButtonStyle.link, row=3, label='〢⛳Wallpaper Anime', url='https://discord.com/channels/809654746301595679/1126741778909904906')
+    view = discord.ui.View()
+    view.add_item(button)
+    view.add_item(button2)
+    view.add_item(button3)
+    view.add_item(button4)
+    await ctx.send(view=view)
+
+@bot.command()
+async def developer(ctx):
+    button = Button(style=discord.ButtonStyle.link, row=0, label='〢⛳UI', url='https://discord.com/channels/809654746301595679/1126852375525728296')
+    button2 = Button(style=discord.ButtonStyle.link, row=1, label='〢⛳Screenshot', url='https://discord.com/channels/809654746301595679/1126850087587434579')
+    view = discord.ui.View()
+    view.add_item(button)
+    view.add_item(button2)
+    await ctx.send(view=view)
+
+@bot.command()
+async def test(ctx):
+    button = Button(style=discord.ButtonStyle.link, row=0, label='〢⛳Google', url='https://google.com')
+    button2 = Button(style=discord.ButtonStyle.link, row=1, label='〢⛳Google', url='httpss://google.com')
+    view = discord.ui.View()
+    view.add_item(button)
+    view.add_item(button2)
+    await ctx.send(view=view)
 
 #runrunrunrunrun
 bot.run('OTY3MTcwODYxNTA3NDQwNjUw.GPLjOD.h93uoLLI57oJBy1whpAZXc7TSBGRiY5QVxNjAo')
